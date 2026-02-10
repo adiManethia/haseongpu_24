@@ -27,7 +27,39 @@
 # @date   2011-05-03
 # @licence: GPLv3
 #
+
 ###################################################################################
+# ##################################################################################
+ # Copyright 2013 Daniel Albach, Erik Zenker, Carlchristian Eckert
+ #
+ # This file is part of HASEonGPU
+ #
+ # HASEonGPU is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+ # the Free Software Foundation, either version 3 of the License, or
+ # (at your option) any later version.
+ #
+ # HASEonGPU is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ # GNU General Public License for more details.
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with HASEonGPU.
+ # If not, see <http://www.gnu.org/licenses/>.
+ #################################################################################
+
+############################### Laser pump routine ################################
+# ASE calulations main file 16kW
+# longer calculation without pump action possibel for heat generation
+# estimation in the cladding
+#
+# @author Daniel Albach
+# @date   2011-05-03
+# @licence: GPLv3
+#
+###################################################################################
+
 import time
 import numpy as np
 from scipy.io import loadmat, savemat
@@ -110,12 +142,12 @@ timetotal = 1e-3  # [s]
 time_t = timetotal / timeslice
 
 # ASE application
-maxGPUs = 1 #TODO this was 2 before but gave error
+maxGPUs = 4 #TODO this was 2 before but gave error
 nPerNode = 4
 deviceMode = 'gpu'
 # parallelMode = 'mpi'
 parallelMode = 'threaded'
-useReflections = True
+useReflections = False 
 refractiveIndices = [1.83, 1, 1.83, 1]
 repetitions = 4
 minRaysPerSample = 1e5
@@ -359,11 +391,10 @@ for i_slice in range(1, timeslice_tot):
     for i_p in range(p.shape[0]):
         for i_z in range(mesh_z): 
             beta_cell[i_p,i_z] = crystal['tfluo']*(dndt_pump[i_p,i_z]-dndt_ASE[i_p,i_z])*(1-np.exp(-time_t/crystal['tfluo']))+beta_cell[i_p,i_z]*np.exp(-time_t/crystal['tfluo'])
-
-    file_b = ['beta_cell_' + str(timeslice_tot) + '.vtk']
-    file_p = ['dndt_pump_' + str(timeslice_tot) + '.vtk']
-    file_A = ['dndt_ASE_' + str(timeslice_tot) + '.vtk']
-    file_C = ['flux_clad_' + str(timeslice_tot) + '.vtk']
+    file_b = 'beta_cell_' + str(timeslice_tot) + '.vtk'
+    file_p = 'dndt_pump_' + str(timeslice_tot) + '.vtk'
+    file_A = 'dndt_ASE_' + str(timeslice_tot) + '.vtk'
+    file_C = 'flux_clad_' + str(timeslice_tot) + '.vtk'
 
     vtk_wedge(file_b, beta_cell, p, t_int, mesh_z, z_mesh)
     vtk_wedge(file_p, dndt_pump, p, t_int, mesh_z, z_mesh)
@@ -374,6 +405,7 @@ for i_slice in range(1, timeslice_tot):
     toc = time.perf_counter()
     elapsed_time= toc - tic 
 
-    #print(f'Time taken: {toc} seconds')
+    print(f'Time taken: {toc} seconds')
 
-    
+
+

@@ -1,0 +1,8 @@
+Unloading module gcc/14.2.0 
+Loading module gcc/14.2.0 
+Loading module boost/1.86.0 
+Unloading module cuda/12.8 
+Loading module cuda/12.8 
+Unloading module boost/1.86.0 
+Loading module boost/1.86.0 
+/var/spool/slurmd/job122878/slurm_script: line 27: SLRUM_CPUS_PER_TASK: unbound variable

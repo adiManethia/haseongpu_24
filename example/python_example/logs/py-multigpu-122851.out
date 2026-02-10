@@ -1,0 +1,17 @@
+=============================================
+Epilog started: Sun Feb  8 17:56:51 CET 2026
+User:           maneth14
+Job ID:         122851
+Partition:      gpu-v100
+Account:        default
+Batchhost:      gv032
+Job name:       allocation
+Nodelist:       gv032
+No. of tasks:   16
+T used:           00:00:01 
+T requested:               
+Exit code:      256
+Working dir:    /data/home2/maneth14/haseongpu_24/example/python_example
+Energy (J):     3.96K
+Energy (kWh):   .001100
+---------------------------------------------

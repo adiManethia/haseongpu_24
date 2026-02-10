@@ -1,0 +1,67 @@
+Unloading module gcc/14.2.0 
+Loading module gcc/14.2.0 
+Loading module boost/1.86.0 
+Unloading module cuda/12.8 
+Loading module cuda/12.8 
+Unloading module boost/1.86.0 
+Loading module boost/1.86.0 
+Traceback (most recent call last):
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/laserPumpCladdingExample.py", line 329, in <module>
+    calcPhiASE(
+    ~~~~~~~~~~^
+        p,
+        ^^
+    ...<28 lines>...
+        maxGPUs,
+        ^^^^^^^^
+        nPerNode)
+        ^^^^^^^^^
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/calcPhiASE.py", line 357, in calcPhiASE
+    mseValues, raysUsedPerSample, phiASE = parse_calcPhiASE_output(TMP_FOLDER)
+                                           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/calcPhiASE.py", line 216, in parse_calcPhiASE_output
+    os.chdir(FOLDER)
+    ~~~~~~~~^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/data/home2/maneth14/haseongpu_24/example/python_example/input_tmp'
+srun: error: gv031: task 0: Exited with exit code 1
+Traceback (most recent call last):
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/laserPumpCladdingExample.py", line 329, in <module>
+    calcPhiASE(
+    ~~~~~~~~~~^
+        p,
+        ^^
+    ...<28 lines>...
+        maxGPUs,
+        ^^^^^^^^
+        nPerNode)
+        ^^^^^^^^^
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/calcPhiASE.py", line 357, in calcPhiASE
+    mseValues, raysUsedPerSample, phiASE = parse_calcPhiASE_output(TMP_FOLDER)
+                                           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/calcPhiASE.py", line 216, in parse_calcPhiASE_output
+    os.chdir(FOLDER)
+    ~~~~~~~~^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/data/home2/maneth14/haseongpu_24/example/python_example/input_tmp'
+srun: error: gv031: task 2: Exited with exit code 1
+Traceback (most recent call last):
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/laserPumpCladdingExample.py", line 329, in <module>
+    calcPhiASE(
+    ~~~~~~~~~~^
+        p,
+        ^^
+    ...<28 lines>...
+        maxGPUs,
+        ^^^^^^^^
+        nPerNode)
+        ^^^^^^^^^
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/calcPhiASE.py", line 357, in calcPhiASE
+    mseValues, raysUsedPerSample, phiASE = parse_calcPhiASE_output(TMP_FOLDER)
+                                           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/data/home2/maneth14/haseongpu_24/example/python_example/calcPhiASE.py", line 216, in parse_calcPhiASE_output
+    os.chdir(FOLDER)
+    ~~~~~~~~^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/data/home2/maneth14/haseongpu_24/example/python_example/input_tmp'
+srun: error: gv031: task 3: Exited with exit code 1
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** STEP 122880.0 ON gv031 CANCELLED AT 2026-02-08T23:07:33 DUE TO TIME LIMIT ***
+slurmstepd: error: *** JOB 122880 ON gv031 CANCELLED AT 2026-02-08T23:07:33 DUE TO TIME LIMIT ***

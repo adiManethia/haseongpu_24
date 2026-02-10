@@ -1,0 +1,17 @@
+=============================================
+Epilog started: Tue Feb 10 04:17:56 CET 2026
+User:           maneth14
+Job ID:         125960
+Partition:      gpu-v100
+Account:        default
+Batchhost:      gv031
+Job name:       py-multig+
+Nodelist:       gv031
+No. of tasks:   64
+T used:           00:00:02 
+T requested:      04:00:00 
+Exit code:      256
+Working dir:    /data/home2/maneth14/haseongpu_24/example/python_example
+Energy (J):     5.70K
+Energy (kWh):   .001583
+---------------------------------------------
