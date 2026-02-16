@@ -77,3 +77,8 @@ talk/*.spl
 talk/*.nav
 talk/*.snm
 talk/*.~lock.*
+*.vtk 
+/example/matlab_example/*.vtk
+/example/matlab_example/save_*.mat
+/example/python_example/logs/*
+/example/python_example/*.npz

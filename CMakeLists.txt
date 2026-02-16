@@ -1,13 +1,13 @@
-cmake_minimum_required(VERSION 3.24)
-project(HASEonGPU LANGUAGES CUDA CXX C)
+cmake_minimum_required(VERSION 3.30)
+project(HASEonGPU LANGUAGES CUDA CXX C) 
 
 include(CMakePrintHelpers)
 
 # dependencies
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30")
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30") 
   cmake_policy(SET CMP0167 NEW)
 endif()
-find_package(Boost 1.70.0 REQUIRED COMPONENTS program_options)
+find_package(Boost 1.86 REQUIRED COMPONENTS program_options)
 find_package(MPI REQUIRED COMPONENTS C)
 find_package(Threads REQUIRED)
 find_package(CUDAToolkit REQUIRED COMPONENTS cudart)
