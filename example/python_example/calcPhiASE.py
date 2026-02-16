@@ -209,6 +209,7 @@ def create_calcPhiASE_input(points,
     os.chdir(CURRENT_DIR)
 
 
+
 ######################### parse_calcPhiASE_output #############################
 def parse_calcPhiASE_output(FOLDER):
     import re
@@ -220,7 +221,6 @@ def parse_calcPhiASE_output(FOLDER):
             # First line: shape (may contain commas too)
             shape_tokens = next(fid).strip().replace(",", "").split()
             arraySize = [int(x) for x in shape_tokens]
-
             # Second line: values (may contain commas as thousands separators)
             line = next(fid).strip()
             # Remove commas inside numbers: "1,234" -> "1234"
@@ -235,8 +235,7 @@ def parse_calcPhiASE_output(FOLDER):
     raysUsedPerSample = _read_array("N_rays.txt", float)
 
     os.chdir(CURRENT_DIR)
-    return [mseValues, raysUsedPerSample, phiASE]
-
+    return phiASE, mseValues, raysUsedPerSample
 
 
 
@@ -275,21 +274,22 @@ def calcPhiASE(
     nPerNode
 ):
 
-    # -------------------------
-    # Ensure parser-safe mesh I/O by compacting/remapping points
-    # -------------------------
-    points2, tri2, tnp2, betaCells2 = _compact_mesh_for_parser(
-        points=points,
-        trianglePointIndices=trianglePointIndices,
-        triangleNormalPoint=triangleNormalPoint,
-        betaCells=betaCells
-    )
 
-    # Replace with compacted arrays for file writing and for maxSample calculation
-    points = points2
-    trianglePointIndices = tri2
-    triangleNormalPoint = tnp2
-    betaCells = betaCells2
+    # # -------------------------
+    # # Ensure parser-safe mesh I/O by compacting/remapping points
+    # # -------------------------
+    # points2, tri2, tnp2, betaCells2 = _compact_mesh_for_parser(
+    #     points=points,
+    #     trianglePointIndices=trianglePointIndices,
+    #     triangleNormalPoint=triangleNormalPoint,
+    #     betaCells=betaCells
+    # )
+    #
+    # # Replace with compacted arrays for file writing and for maxSample calculation
+    # points = points2
+    # trianglePointIndices = tri2
+    # triangleNormalPoint = tnp2
+    # betaCells = betaCells2
 
     minSample = 0
     nP = points.shape[0]  # points is (N,2)
@@ -304,8 +304,6 @@ def calcPhiASE(
 
     CALCPHIASE_DIR = os.getcwd()
     TMP_FOLDER = os.path.join(CALCPHIASE_DIR, 'input_tmp')
-
-    clean_IO_files(TMP_FOLDER)
 
     create_calcPhiASE_input(
         points,
@@ -332,32 +330,40 @@ def calcPhiASE(
         reflectivities,
         TMP_FOLDER
     )
-
-    status = os.system(
-        Prefix + CALCPHIASE_DIR + '/../../build/calcPhiASE '
-        + f'--parallel-mode={parallelMode}'
-        + f' --device-mode={deviceMode}'
-        + f' --min-rays={int(minRaysPerSample)}'
-        + f' --max-rays={int(maxRaysPerSample)}'
-        + REFLECT
-        + f' --input-path={TMP_FOLDER}'
-        + f' --output-path={TMP_FOLDER}'
-        + f' --min-sample-i={minSample}'
-        + f' --max-sample-i={maxSample}'
-        + f' --ngpus={maxGPUs}'
-        + f' --repetitions={repetitions}'
-        + f' --mse-threshold={mseThreshold}'
-        + f' --spectral-resolution={laserParameter["l_res"]}'
+    cmd = (
+            Prefix + CALCPHIASE_DIR + '/../../build/calcPhiASE'
+            + f' --parallel-mode={parallelMode}'
+            + f' --device-mode={deviceMode}'
+            + f' --min-rays={int(minRaysPerSample)}'
+            + f' --max-rays={int(maxRaysPerSample)}'
+            + REFLECT
+            + f' --input-path={TMP_FOLDER}'
+            + f' --output-path={TMP_FOLDER}'
+            + f' --min-sample-i={minSample}'
+            + f' --max-sample-i={maxSample}'
+            + f' --ngpus={maxGPUs}'
+            + f' --repetitions={repetitions}'
+            + f' --mse-threshold={mseThreshold}'
+            + f' --spectral-resolution={laserParameter["l_res"]}'
     )
+    print(cmd)
+    status = os.system(cmd)
 
     if status != 0:
         print('This step of the raytracing computation did NOT finish successfully. Aborting.')
         exit()
 
-    mseValues, raysUsedPerSample, phiASE = parse_calcPhiASE_output(TMP_FOLDER)
+    phiASE, mseValues, raysUsedPerSample = parse_calcPhiASE_output(TMP_FOLDER)
+    print("bef delete")
     clean_IO_files(TMP_FOLDER)
 
     return phiASE, mseValues, raysUsedPerSample
 
 
-  
+
+
+
+
+
+
+## here is an error that transit to parser file, assertRange error, in max element case, see in all files where it is define and carried away.

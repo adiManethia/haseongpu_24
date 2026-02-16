@@ -66,11 +66,11 @@ def beta_int3(beta_crystal, pulse, const, crystal, steps, int_field, mode, Ntot_
     time_step = tau_pump / (steps_time - 1)
     crystal_step = crystal_length / (steps_crystal - 1)
     
-    # prepare the vectors with zeros
+    # prepare the vectors with zeros (use 1D arrays for scalar arithmetic)
     beta_store = np.zeros((steps_crystal, steps_time))
-    pump_l = np.zeros((steps_crystal, 1))
-    pump_BRM = np.zeros((steps_crystal, 1))
-    pump = np.zeros((steps_crystal, 1))
+    pump_l = np.zeros(steps_crystal)
+    pump_BRM = np.zeros(steps_crystal)
+    pump = np.zeros(steps_crystal)
     
     
     
@@ -91,22 +91,21 @@ def beta_int3(beta_crystal, pulse, const, crystal, steps, int_field, mode, Ntot_
 
         if mode['BRM']== 1:
             beta_crystal = np.flipud(beta_crystal)
-            
+
             pump_BRM[0] = pump[-1]*mode['R']
             Ntot_gradient = np.flipud(Ntot_gradient)
-        
-    #   this is the negative direction
+
+            # this is the negative direction
             for jcrys in range(steps_crystal-1): 
-    #           step one is from point one to two for I_pump
                 beta_average = (beta_crystal[jcrys]+beta_crystal[jcrys+1])/2
                 pump_BRM[jcrys+1] = pump_BRM[jcrys] * np.exp(-(sigma_abs - beta_average*(sigma_abs+sigma_ems))*Ntot_gradient[jcrys]*crystal_step)
-    #         now turn the second pumppart and the beta again
-            pump_BRM= np.rot90(pump_BRM,2)
+
+            # reverse the BRM pump vector
+            pump_BRM = np.flip(pump_BRM)
             beta_crystal = np.flipud(beta_crystal)
-            
-    #         full pump intensity is I+ + I-
+
             Ntot_gradient = np.flipud(Ntot_gradient)
-    #         in the case of BRM the return value has to be I-!
+            # in the case of BRM the return value has to be I-!
             pulse[itime]=pump_BRM[0]
         else:
             pulse[itime] = pump_l[icrys+1]

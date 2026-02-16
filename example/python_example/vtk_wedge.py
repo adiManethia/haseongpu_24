@@ -53,9 +53,9 @@ def vtk_wedge(file_n, phi_ASE, p, t_int, mesh_z, z_mesh):
         
         # Write header
         fid.write(f'# vtk DataFile Version 2.0{nl}')
-        fid.write('Wedge example{nl}')
-        fid.write('ASCII{nl}')
-        fid.write('DATASET UNSTRUCTURED_GRID{nl}')
+        fid.write(f'Wedge example{nl}')
+        fid.write(f'ASCII{nl}')
+        fid.write(f'DATASET UNSTRUCTURED_GRID{nl}')
         fid.write(f'POINTS {size_p2} float{nl}')
         
         # Write data-coordinates
@@ -99,8 +99,8 @@ def vtk_wedge(file_n, phi_ASE, p, t_int, mesh_z, z_mesh):
         
         # Write point data
         fid.write(f'POINT_DATA {mesh_z * size_p}{nl}')
-        fid.write('SCALARS scalars float 1{nl}')
-        fid.write('LOOKUP_TABLE default{nl}')
+        fid.write(f'SCALARS scalars float 1{nl}')
+        fid.write(f'LOOKUP_TABLE default{nl}')
         
         # Write PHI_ASE data
         ## extract the scalar values for the current z-level from phi_ASE

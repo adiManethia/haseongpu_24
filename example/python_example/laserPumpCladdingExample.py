@@ -27,37 +27,6 @@
 # @date   2011-05-03
 # @licence: GPLv3
 #
-
-###################################################################################
-# ##################################################################################
- # Copyright 2013 Daniel Albach, Erik Zenker, Carlchristian Eckert
- #
- # This file is part of HASEonGPU
- #
- # HASEonGPU is free software: you can redistribute it and/or modify
- # it under the terms of the GNU General Public License as published by
- # the Free Software Foundation, either version 3 of the License, or
- # (at your option) any later version.
- #
- # HASEonGPU is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- # GNU General Public License for more details.
- #
- # You should have received a copy of the GNU General Public License
- # along with HASEonGPU.
- # If not, see <http://www.gnu.org/licenses/>.
- #################################################################################
-
-############################### Laser pump routine ################################
-# ASE calulations main file 16kW
-# longer calculation without pump action possibel for heat generation
-# estimation in the cladding
-#
-# @author Daniel Albach
-# @date   2011-05-03
-# @licence: GPLv3
-#
 ###################################################################################
 
 import time
@@ -69,7 +38,7 @@ from set_variables import set_variables
 from vtk_wedge import vtk_wedge
 from calcPhiASE import calcPhiASE
 
-tic= time.perf_counter()
+
 
 # Crystal parameter
 crystal = {
@@ -142,18 +111,20 @@ timetotal = 1e-3  # [s]
 time_t = timetotal / timeslice
 
 # ASE application
-maxGPUs = 4 #TODO this was 2 before but gave error
+maxGPUs = 2 #TODO this was 2 before but gave error
 nPerNode = 4
 deviceMode = 'gpu'
 # parallelMode = 'mpi'
 parallelMode = 'threaded'
-useReflections = False 
+useReflections = True
 refractiveIndices = [1.83, 1, 1.83, 1]
 repetitions = 4
 minRaysPerSample = 1e5
 maxRaysPerSample = minRaysPerSample * 100
 mseThreshold = 0.005
 
+## this is our starting counter
+tic= time.perf_counter()
 
 # Constants for short use
 c = phy_const['c']  # m/s
@@ -169,7 +140,10 @@ pt_data = loadmat('pt.mat')
 
 # extract necessary variables
 p = np.array(pt_data['p'])
-t = np.array([[x -1 for x in y] for y in  pt_data['t']]) # indes shift due to earlier matlab konvention 
+print(f'points shape from loadmat {p.shape[0]}')
+t = np.array([[x -1 for x in y] for y in  pt_data['t']]) # indes shift due to earlier matlab konvention
+print("t min/max:", t.min(), t.max(), "t shape:", t.shape)
+
 set_variables(p, t)
 
 variable_data = loadmat('variable.mat')
@@ -225,7 +199,7 @@ dndt_pump = (beta_c_2 - beta_cell) / time_beta
 pump['I'] = intensity
 pump['T'] = temp
 crystal['tfluo'] = temp_f
-time_int = 1e-16
+time_int = 1e-6
 
 for i_p in range(p.shape[0]): 
     for i_z in range(mesh_z):
@@ -247,9 +221,12 @@ clad_abs = 5.5
 clad_index = np.where(clad==clad_number)[0]
 Yb_index = np.where(clad!=clad_number)[0]
 
+print("phi_ASE.shape[0]:", phi_ASE.shape[0])
 
 Yb_points_t = t.copy()
 Yb_points_t = np.delete(Yb_points_t, clad_index, axis=0)
+print("Yb_points_t min/max:", Yb_points_t.min(), Yb_points_t.max(), "len(unique):", len(Yb_points_t))
+
 Yb_points_t2 = np.reshape(Yb_points_t,(-1,1))
 del Yb_points_t
 Yb_points_t = np.unique(Yb_points_t2)
@@ -272,6 +249,7 @@ clad_int = np.int32(clad)
 ################################ Main pump loop ###################################
 
 for i_slice in range(1, timeslice_tot):
+
     print('TimeSlice', i_slice, 'of', timeslice_tot-1, 'started')
     # ******************* BETA PUMP TEST ******************************
     # make a test with the gain routine "gain.m" for each of the points
@@ -326,7 +304,7 @@ for i_slice in range(1, timeslice_tot):
         zi = zi + z_mesh
 
     ############################ Call external ASE application ####################
-    calcPhiASE(
+    phi_ASE, mse_values, N_rays = calcPhiASE(
         p,
         t_int,
         beta_cell,
@@ -358,9 +336,35 @@ for i_slice in range(1, timeslice_tot):
         parallelMode,
         maxGPUs,
         nPerNode)
-    
-        # Calc dn/dt ASE, change it to only the Yb:YAG points
-        # For Yb points
+
+    # Ensure phi_ASE is 2D (points x levels). If a spectral axis is present
+    # collapse it by summing over that axis to obtain the integrated flux.
+    phi_ASE = np.asarray(phi_ASE)
+    if phi_ASE.ndim == 3:
+        nP = p.shape[0]
+        NZ = mesh_z
+        # prefer axis matching spectral resolution
+        spec_ax = None
+        for ax, size in enumerate(phi_ASE.shape):
+            if size == laser['l_res']:
+                spec_ax = ax
+                break
+        if spec_ax is None:
+            for ax, size in enumerate(phi_ASE.shape):
+                if size not in (nP, NZ):
+                    spec_ax = ax
+                    break
+        if spec_ax is None:
+            spec_ax = 2
+        phi_ASE = np.sum(phi_ASE, axis=spec_ax)
+        if phi_ASE.shape == (NZ, nP):
+            phi_ASE = phi_ASE.T
+        elif phi_ASE.shape != (nP, NZ):
+            phi_ASE = phi_ASE.reshape((nP, NZ), order='F')
+
+    print('phi_ASE.shape after collapse:', phi_ASE.shape)
+
+    # Calc dn/dt ASE, change it to only the Yb:YAG points
     for i_p in range(length_Yb):
         for i_z in range(mesh_z):
             pos_Yb = Yb_points_t[i_p]
@@ -370,7 +374,7 @@ for i_slice in range(1, timeslice_tot):
 
     # Now for the cladding points
     for i_p in range(length_clad):
-        for i_z in range(mesh_z):
+        for i_z in range(mesh_z-1):
             # Calc local gain (g_l)
             pos_clad = clad_points_t[i_p]
             flux_clad[pos_clad,i_z] = clad_abs*phi_ASE[pos_clad,i_z]/crystal['tfluo']
@@ -389,23 +393,39 @@ for i_slice in range(1, timeslice_tot):
     intensity = pump['I']
 
     for i_p in range(p.shape[0]):
-        for i_z in range(mesh_z): 
+        beta_crystal = np.copy(beta_cell[i_p, :])
+        pulse = np.zeros((steps['time'], 1))
+        pump['I'] = intensity*np.exp(-np.sqrt(p[i_p,0]**2/pump['ry']**2+p[i_p,1]**2/pump['rx']**2)**pump['exp'])
+        [beta_crystal,beta_store,pulse,Ntot_gradient] = beta_int3(beta_crystal,pulse,phy_const,crystal,steps,pump,mode,Ntot_gradient)
+
+        beta_c_2[i_p, :] = beta_crystal.ravel()
+    if i_slice<timeslice:
+        dndt_pump = np.divide(np.subtract(beta_c_2,beta_cell),time_beta)
+    else:
+        dndt_pump = np.zeros((p.shape[0],mesh_z))
+    pump['I'] = intensity
+    pump['T'] = temp
+    crystal['tfluo'] = temp_f
+    for i_p in range(p.shape[0]):
+        for i_z in range(mesh_z-1):
             beta_cell[i_p,i_z] = crystal['tfluo']*(dndt_pump[i_p,i_z]-dndt_ASE[i_p,i_z])*(1-np.exp(-time_t/crystal['tfluo']))+beta_cell[i_p,i_z]*np.exp(-time_t/crystal['tfluo'])
-    file_b = 'beta_cell_' + str(timeslice_tot) + '.vtk'
-    file_p = 'dndt_pump_' + str(timeslice_tot) + '.vtk'
-    file_A = 'dndt_ASE_' + str(timeslice_tot) + '.vtk'
-    file_C = 'flux_clad_' + str(timeslice_tot) + '.vtk'
 
-    vtk_wedge(file_b, beta_cell, p, t_int, mesh_z, z_mesh)
-    vtk_wedge(file_p, dndt_pump, p, t_int, mesh_z, z_mesh)
-    vtk_wedge(file_A, dndt_ASE, p, t_int, mesh_z, z_mesh)
-    vtk_wedge(file_C, flux_clad, p, t_int, mesh_z, z_mesh)
 
-    print('Calculations finished')
-    toc = time.perf_counter()
-    elapsed_time= toc - tic 
 
-    print(f'Time taken: {toc} seconds')
+file_b = 'beta_cell_' + str(timeslice_tot) + '.vtk'
+file_p = 'dndt_pump_' + str(timeslice_tot) + '.vtk'
+file_A = 'dndt_ASE_' + str(timeslice_tot) + '.vtk'
+file_C = 'flux_clad_' + str(timeslice_tot) + '.vtk'
 
+vtk_wedge(file_b, beta_cell, p, t_int, mesh_z, z_mesh)
+vtk_wedge(file_p, dndt_pump, p, t_int, mesh_z, z_mesh)
+vtk_wedge(file_A, dndt_ASE, p, t_int, mesh_z, z_mesh)
+vtk_wedge(file_C, flux_clad, p, t_int, mesh_z, z_mesh)
+
+print('Calculations finished')
+toc = time.perf_counter()
+elapsed_time= toc - tic
+
+print(f'Time taken: {toc} seconds')
 
 

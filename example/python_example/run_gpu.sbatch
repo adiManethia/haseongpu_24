@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=py-multigpu
-#SBATCH --partition=gpu-v100
+#SBATCH --partition=gpu-a100
+#SBATCH --gres=gpu:2
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
+#SBATCH --ntasks=1
 #SBATCH --gpus-per-task=1
 
 #SBATCH --cpus-per-task=16
@@ -34,5 +35,5 @@ echo "CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
 nvidia-smi -L
 
 # ---- Run your python ----
-srun python -u laserPumpCladdingExample.py
+python -u laserPumpCladdingExample.py
 
