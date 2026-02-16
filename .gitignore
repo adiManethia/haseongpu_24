@@ -33,6 +33,7 @@ run_octrace.m
 paper/Makefile
 paper/updatePDF.sh
 paper/*.aux
+build
 paper/*.log
 paper/*.dvi
 paper/*.bbl
